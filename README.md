@@ -63,7 +63,7 @@ include(":sampleapp")
 
 ## Run Sample Module to Test the Library Locally
 
-1. Open `sample/build.gradle.kts` and add dependency on the local library:
+1. Open `sampleapp/build.gradle.kts` and add dependency on the local library:
    ```kotlin
    dependencies {
        implementation(project(":samplelib"))
@@ -105,12 +105,8 @@ include(":sampleapp")
 ### Publish to GitHub using JitPack
 
 1. Push your project to a **public or private** GitHub repository.
-2. **Ensure `sampleaar` has a `build.gradle.kts` file** and `settings.gradle.kts` includes it.
-3. Create a **GitHub release or tag**, e.g., `v1.0.0`:
-   ```sh
-   git tag v1.0.0
-   git push origin v1.0.0
-   ```
+2. **Ensure `samplelib` has a `build.gradle.kts` file** and `settings.gradle.kts` includes it.
+3. Run `./release.bat <version_tag>` to build and create a Github release (Need to install [Github CLI](https://cli.github.com/) first, then run `gh auth login`)
 4. Go to [JitPack](https://jitpack.io/) and enter your GitHub repository URL.
 5. Click **"Get it"**, and JitPack will generate the AAR for you.
 
