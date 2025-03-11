@@ -102,26 +102,45 @@ include(":sampleapp")
   
 ## Publishing
 
-### Publish to GitHub using JitPack
+### Publish to GitHub Packages (Maven)
 
-1. Push your project to a **public or private** GitHub repository.
-2. **Ensure `samplelib` has a `build.gradle.kts` file** and `settings.gradle.kts` includes it.
-3. Run `./release.bat <version_tag>` to build and create a Github release (Need to install [Github CLI](https://cli.github.com/) first, then run `gh auth login`)
-4. Go to [JitPack](https://jitpack.io/) and enter your GitHub repository URL.
-5. Click **"Get it"**, and JitPack will generate the AAR for you.
-
-### JitPack Dependency for Other Projects
-Add this to the **root `settings.gradle.kts`** of any project using your library:
+1. Update `./samplelib/build.gradle.kts` for publishing
 ```kotlin
-maven { url = uri("https://jitpack.io") }
-```
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/YOUR_GITHUB_USERNAME/YOUR_REPO")
+            credentials {
+                username = project.findProperty("gpr.usr") as String? ?: System.getenv("GITHUB_USERNAME")
+                password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
 
-Then add the dependency to the module `build.gradle.kts`:
-```kotlin
-dependencies {
-    implementation("com.github.yourusername:YourRepoName:1.0.0")
+    publications {
+        create<MavenPublication>("release") {
+            from(components["release"]) // This tells Gradle to publish the release AAR
+
+            groupId = "com.fearth.sample.android"  // Change this to match your package
+            artifactId = "samplelib" // Library name
+            version = "1.0.0"
+
+            artifact("$buildDir/outputs/aar/samplelib-release.aar") // Path to AAR
+        }
+    }
 }
 ```
+
+2. Setup your github username & token in `config.bat` (create from template if needed) or `config.sh`. To create Github token:
+    - Go [here](https://github.com/settings/tokens) add choose create `Classic Token`
+    - Set these permissions: repo, write:packages, read:packages
+
+3. Run `publish.bat` or `publish.sh` to build and publish the library to GitHub Packages
+
+4. Check the published package:
+    - Go to Github repo page and check for `Packages` next to `Releases`
+    - Example: [Example Github Package Page](https://github.com/phucanh1939?tab=packages&repo_name=sample-android-library)
 
 ## Usage
 

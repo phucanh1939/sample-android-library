@@ -47,7 +47,7 @@ for /f "tokens=*" %%i in ('git remote get-url origin') do set GIT_REPO=%%i
 gh release create %VERSION% %ZIP_FILE% --title "Version %VERSION%" --notes %RELEASE_MSG% --latest --repo %GIT_REPO%
 if %errorlevel% neq 0 (
     echo Updating existing release...
-    gh release upload %VERSION% %ZIP_FILE% --repo YOUR_GITHUB_USERNAME/YOUR_REPO
+    gh release upload %VERSION% %ZIP_FILE% --repo %GIT_REPO%
 )
 
 echo Release %VERSION% published successfully!

@@ -1,5 +1,6 @@
 plugins {
-    alias(libs.plugins.android.library)
+    id("com.android.library")
+    id("maven-publish")
 }
 
 android {
@@ -8,8 +9,6 @@ android {
 
     defaultConfig {
         minSdk = 21
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
 
@@ -30,4 +29,26 @@ android {
 
 dependencies {
 
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/phucanh1939/sample-android-library")
+            credentials {
+                username = project.findProperty("gpr.usr") as String? ?: System.getenv("GITHUB_USERNAME")
+                password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
+
+    publications {
+        create<MavenPublication>("release") {
+            groupId = "com.fearth.sample.android"  // Change this to match your package
+            artifactId = "samplelib" // Library name
+            version = "1.0.0"
+            artifact("$buildDir/outputs/aar/samplelib-release.aar") // Path to AAR
+        }
+    }
 }

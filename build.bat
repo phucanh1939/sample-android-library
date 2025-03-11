@@ -15,10 +15,10 @@ set AAR_PATH=%LIB_NAME%\build\outputs\aar\%LIB_NAME%-release.aar
 
 :: Check if AAR was built successfully
 if exist "%AAR_PATH%" (
-    echo ✅ Build successful! AAR located at:
+    echo Build successful! AAR located at:
     echo %AAR_PATH%
 ) else (
-    echo ❌ Build failed!
+    echo Build failed!
     exit /b 1
 )
 
