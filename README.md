@@ -140,31 +140,52 @@ publishing {
 
 4. Check the published package:
     - Go to Github repo page and check for `Packages` next to `Releases`
-    - Example: [Example Github Package Page](https://github.com/phucanh1939?tab=packages&repo_name=sample-android-library)
+    - Example: [Example Github Package Page](https://github.com/phucanh1939/sample-android-library/packages)
 
 ## Usage
 
-### Import the Library in Another Project
-1. Add JitPack to `settings.gradle.kts`:
+### Using Github Packages
+
+### Gradle 
+
+A sample project (using Gradle) can be found [here](https://github.com/phucanh1939/sample-android-library-test)
+
+1. Create `Github Personal Token` on consumer github account
+    - Go [here](https://github.com/settings/tokens) add choose create `Classic Token`
+    - Set these permissions: read:packages
+
+2. Add Github Packages Repository to `settings.gradle.kts`:
    ```kotlin
-   dependencyResolutionManagement {
-       repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-       repositories {
-           google()
-           mavenCentral()
-           maven { url = uri("https://jitpack.io") }
-       }
-   }
+    dependencyResolutionManagement {
+        repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+        repositories {
+            maven {
+                url = uri("https://maven.pkg.github.com/phucanh1939/sample-android-library") // url to your github package
+                credentials {
+                    username = providers.gradleProperty("gpr.usr").getOrNull() ?: System.getenv("GITHUB_USERNAME") // consumer github account (not the owner)
+                    password = providers.gradleProperty("gpr.key").getOrNull() ?: System.getenv("GITHUB_TOKEN") // consummer github token (not the owner)
+                }
+            }
+            google()
+            mavenCentral()
+        }
+    }
    ```
-2. Add the dependency to `build.gradle.kts`:
+
+3. Add the dependency to `build.gradle.kts`:
    ```kotlin
    dependencies {
-       implementation("com.github.yourusername:YourRepoName:1.0.0")
+        implementation("com.fearth.sample.android:samplelib:1.0.0") // format: <groupId>:<artifactId>:<version>
    }
    ```
-3. Use the library in code:
+
+4. Use the library in code:
    ```java
    import com.fearth.sampleaar.SampleUtils;
    
    String message = SampleUtils.getMessage();
    ```
+
+### Apache Maven Registry
+
+Please follow the [Github Apache Mave Registry Guideline](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-apache-maven-registry)
