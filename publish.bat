@@ -1,16 +1,29 @@
 @echo off
-echo Loading configuration...
-call config.bat
 
-echo GITHUB_USERNAME: %GITHUB_USERNAME%
-echo GITHUB_TOKEN: %GITHUB_TOKEN%
+set LIB_NAME=samplelib
+set GITHUB_REPO=https://github.com/phucanh1939/sample-android-library
 
-echo Publishing AAR to GitHub Packages...
-gradlew.bat :samplelib:publish --stacktrace --info
+echo Cleaning previous builds...
+call gradlew clean
+IF %ERRORLEVEL% NEQ 0 (
+    echo Error: Cleaning failed!
+    exit /b %ERRORLEVEL%
+)
 
-if %ERRORLEVEL% NEQ 0 (
-    echo Publish failed!
-    exit /b 1
+echo Building AAR for %LIB_NAME%...
+call gradlew :%LIB_NAME%:assembleRelease
+IF %ERRORLEVEL% NEQ 0 (
+    echo Error: Build failed!
+    exit /b %ERRORLEVEL%
+)
+
+echo Publishing %LIB_NAME% to GitHub Packages...
+call gradlew.bat :%LIB_NAME%:publish
+IF %ERRORLEVEL% NEQ 0 (
+    echo Error: Publish failed!
+    exit /b %ERRORLEVEL%
 )
 
 echo Publish successful!
+
+echo Check your package at %GITHUB_REPO%/packages

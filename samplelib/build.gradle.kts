@@ -1,6 +1,23 @@
+import java.util.Properties
+
 plugins {
     id("com.android.library")
     id("maven-publish")
+}
+
+fun loadEnv(): Properties {
+    val envFile = rootProject.file(".env")
+    val properties = Properties()
+    if (envFile.exists()) {
+        envFile.inputStream().use { properties.load(it) }
+    }
+    return properties
+}
+
+val env = loadEnv()
+
+fun getEnv(key: String): String? {
+    return env.getProperty(key) ?: System.getenv(key)
 }
 
 android {
@@ -28,27 +45,42 @@ android {
 }
 
 dependencies {
-
+    implementation(libs.jackson.databind)
+    implementation(libs.jackson.annotations)
+    implementation(libs.jackson.core)
+    implementation(libs.okhttp)
 }
 
 publishing {
     repositories {
         maven {
             name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/phucanh1939/sample-android-library")
+            url = uri(providers.gradleProperty("github.maven.url").get())
             credentials {
-                username = project.findProperty("gpr.usr") as String? ?: System.getenv("GITHUB_USERNAME")
-                password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
+                username = getEnv("GITHUB_USERNAME")
+                password = getEnv("GITHUB_TOKEN")
             }
         }
     }
 
     publications {
         create<MavenPublication>("release") {
-            groupId = "com.fearth.sample.android"  // Change this to match your package
-            artifactId = "samplelib" // Library name
-            version = "1.0.0"
-            artifact("$buildDir/outputs/aar/samplelib-release.aar") // Path to AAR
+            groupId = providers.gradleProperty("lib.group").get()
+            artifactId = providers.gradleProperty("lib.artifact").get()
+            version = providers.gradleProperty("lib.version").get()
+            artifact("$buildDir/outputs/aar/${providers.gradleProperty("lib.name").get()}-release.aar")
+            pom.withXml {
+                val dependenciesNode = asNode().appendNode("dependencies")
+                configurations.implementation.get().dependencies.forEach { dependency ->
+                    if (dependency.group != null && dependency.version != null) {
+                        val dependencyNode = dependenciesNode.appendNode("dependency")
+                        dependencyNode.appendNode("groupId", dependency.group)
+                        dependencyNode.appendNode("artifactId", dependency.name)
+                        dependencyNode.appendNode("version", dependency.version)
+                        dependencyNode.appendNode("scope", "runtime")
+                    }
+                }
+            }
         }
     }
 }

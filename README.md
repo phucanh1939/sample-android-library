@@ -47,10 +47,71 @@ include(":samplelib")
 include(":sampleapp")
 ```
 
-## Import Source File
+### 6. Config the library `build.gradle.kts`
 
+Add `publishing` block to `<libmodule>/build.gradle.kts` for publising to Github Packages
+
+Config needed env vars in `.env` and `gradle.properties`
+
+
+```kotlin
+fun loadEnv(): Properties {
+    val envFile = rootProject.file(".env")
+    val properties = Properties()
+    if (envFile.exists()) {
+        envFile.inputStream().use { properties.load(it) }
+    }
+    return properties
+}
+
+val env = loadEnv()
+
+fun getEnv(key: String): String? {
+    return env.getProperty(key) ?: System.getenv(key)
+}
+
+// ...
+
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri(providers.gradleProperty("github.maven.url").get())
+            credentials {
+                username = getEnv("GITHUB_USERNAME")
+                password = getEnv("GITHUB_TOKEN")
+            }
+        }
+    }
+
+    publications {
+        create<MavenPublication>("release") {
+            groupId = providers.gradleProperty("lib.group").get()
+            artifactId = providers.gradleProperty("lib.artifact").get()
+            version = providers.gradleProperty("lib.version").get()
+            artifact("$buildDir/outputs/aar/${providers.gradleProperty("lib.name").get()}-release.aar")
+            pom.withXml {
+                val dependenciesNode = asNode().appendNode("dependencies")
+                configurations.implementation.get().dependencies.forEach { dependency ->
+                    if (dependency.group != null && dependency.version != null) {
+                        val dependencyNode = dependenciesNode.appendNode("dependency")
+                        dependencyNode.appendNode("groupId", dependency.group)
+                        dependencyNode.appendNode("artifactId", dependency.name)
+                        dependencyNode.appendNode("version", dependency.version)
+                        dependencyNode.appendNode("scope", "runtime")
+                    }
+                }
+            }
+        }
+    }
+}
+
+```
+
+## Develop the Library
+
+### Add source file
 1. Add your source files inside `samplelib/src/main/java/com/fearth/sample/android/samplelib`
-2. Example: Create a simple utility class:
    ```java
    package com.fearth.sample.android.samplelib;
    
@@ -60,6 +121,18 @@ include(":sampleapp")
        }
    }
    ```
+
+### Add dependency
+Add needed dependecy packages in `dependencies` block (of `./<libmodule>/build.gradle.kts`) and use it in your code. The `publications` block has already include code that will automatically include your dependencies in package's pom file (so consumer projects will also has these dependencies when import your package)
+
+```kotlin
+dependencies {
+    implementation(libs.jackson.databind)
+    implementation(libs.jackson.annotations)
+    implementation(libs.jackson.core)
+    implementation(libs.okhttp)
+}
+```
 
 ## Run Sample Module to Test the Library Locally
 
@@ -104,43 +177,15 @@ include(":sampleapp")
 
 ### Publish to GitHub Packages (Maven)
 
-1. Update `./samplelib/build.gradle.kts` for publishing
-```kotlin
-publishing {
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/YOUR_GITHUB_USERNAME/YOUR_REPO")
-            credentials {
-                username = project.findProperty("gpr.usr") as String? ?: System.getenv("GITHUB_USERNAME")
-                password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
-            }
-        }
-    }
-
-    publications {
-        create<MavenPublication>("release") {
-            from(components["release"]) // This tells Gradle to publish the release AAR
-
-            groupId = "com.fearth.sample.android"  // Change this to match your package
-            artifactId = "samplelib" // Library name
-            version = "1.0.0"
-
-            artifact("$buildDir/outputs/aar/samplelib-release.aar") // Path to AAR
-        }
-    }
-}
-```
-
-2. Setup your github username & token in `config.bat` (create from template if needed) or `config.sh`. To create Github token:
+1. Setup your Github username & token in `.env`. To create Github token:
     - Go [here](https://github.com/settings/tokens) add choose create `Classic Token`
     - Set these permissions: repo, write:packages, read:packages
 
+2. Config the publish version in `gradle.properties`
+
 3. Run `publish.bat` or `publish.sh` to build and publish the library to GitHub Packages
 
-4. Check the published package:
-    - Go to Github repo page and check for `Packages` next to `Releases`
-    - Example: [Example Github Package Page](https://github.com/phucanh1939/sample-android-library/packages)
+4. Check the published package at https://github.com/<username>/<repo>/packages (Example https://github.com/phucanh1939/sample-android-library/packages)
 
 ## Usage
 

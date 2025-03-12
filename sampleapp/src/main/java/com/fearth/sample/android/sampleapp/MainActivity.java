@@ -3,6 +3,7 @@ package com.fearth.sample.android.sampleapp;
 import android.os.Bundle;
 
 import com.fearth.sample.android.samplelib.SampleLib;
+import com.fearth.sample.android.samplelib.JsonHelper;
 import com.google.android.material.snackbar.Snackbar;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,13 +21,15 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration appBarConfiguration;
     private ActivityMainBinding binding;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
@@ -50,6 +53,19 @@ public class MainActivity extends AppCompatActivity {
         TextView textView = new TextView(this);
         textView.setText(SampleLib.getMessage());
         setContentView(textView);
+
+        Person person = new Person("John Doe", 30);
+        String json = JsonHelper.toJson(person);
+        String text = "";
+        text += "Serialized JSON: " + json + "\n";
+        Person deserializedPerson = JsonHelper.fromJson(json, Person.class);
+        if (deserializedPerson != null) {
+            text += "Deserialized Object: " + deserializedPerson;
+        } else {
+            text += "Failed to deserialize JSON.";
+        }
+        textView.setText(textView.getText() + "\n" + text);
+
     }
 
     @Override
